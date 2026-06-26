@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>SQL Copilot</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}"/>
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>SQL Copilot</h1>
+        <p>Gere e explique queries SQL em linguagem natural</p>
+    </header>
+    <div class="form-card">
+        <div class="field">
+            <label for="action">Ação</label>
+            <select id="action">
+                <option value="GENERATE">Gerar SQL</option>
+                <option value="EXPLAIN" disabled>Explicar SQL (em breve)</option>
+            </select>
+        </div>
+        <div class="field">
+            <label for="message">Mensagem</label>
+            <textarea id="message"
+                      rows="3"
+                      placeholder="Ex: Top 10 clientes por valor total de pedidos"></textarea>
+        </div>
+        <button id="submit-btn">Enviar</button>
+    </div>
+    <div class="result" id="result" style="display: none;">
+        <div class="result-header">
+            <span class="badge" id="badge"></span>
+            <span>Resultado</span>
+        </div>
+        <pre id="result-pre"></pre>
+    </div>
+</div>
+<script>
+    const button = document.getElementById('submit-btn');
+    const select = document.getElementById('action');
+    const textarea = document.getElementById('message');
+    const result = document.getElementById('result');
+    const resultPre = document.getElementById('result-pre');
+    const badge = document.getElementById('badge');
+
+    function setLoading(loading) {
+        button.disabled = loading;
+        button.style.cursor = loading ? 'not-allowed' : 'pointer';
+        select.disabled = loading;
+        select.style.opacity = loading ? '0.5' : '1';
+        textarea.disabled = loading;
+        textarea.style.opacity = loading ? '0.5' : '1';
+    }
+
+    function typewrite(text) {
+        resultPre.textContent = '';
+        let i = 0;
+
+        const interval = setInterval(() => {
+            if (i < text.length) {
+                resultPre.textContent += text[i];
+                i++;
+            } else {
+                clearInterval(interval);
+            }
+        }, 12);
+    }
+
+    let dotsInterval;
+
+    button.addEventListener('click', async () => {
+        const message = textarea.value.trim();
+
+        if (!message) {
+            return;
+        }
+
+        setLoading(true);
+        result.style.display = 'none';
+
+        let dots = 0;
+        dotsInterval = setInterval(() => {
+            dots = (dots + 1) % 4;
+            button.textContent = 'Gerando' + '.'.repeat(dots);
+        }, 400);
+
+        try {
+            const response = await fetch('/api/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: select.value,
+                    message: message
+                })
+            });
+
+            const data = await response.json();
+            const content = data.sql ?? data.explanation;
+
+            badge.textContent = data.action;
+            result.style.display = 'block';
+            typewrite(content);
+
+        } catch (err) {
+            resultPre.textContent = 'Erro ao processar a requisição.';
+            result.style.display = 'block';
+        } finally {
+            clearInterval(dotsInterval);
+            button.textContent = 'Enviar';
+            setLoading(false);
+        }
+    });
+</script>
+</body>
+</html>

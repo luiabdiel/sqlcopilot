@@ -1,0 +1,24 @@
+spring:
+  application:
+    name: sqlcopilot
+
+  cloud:
+    openfeign:
+      client:
+        config:
+          default:
+            connectTimeout: 5000
+            readTimeout: 300000
+          llm-client:
+            url: https://openrouter.ai/api/v1
+
+  web:
+    resources:
+      cache:
+        period: 0
+
+server:
+  port: 8080
+
+openrouter:
+  api-key: ${OPENROUTER_API_KEY}
