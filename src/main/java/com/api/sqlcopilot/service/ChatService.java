@@ -9,6 +9,7 @@ import com.api.sqlcopilot.dto.ChatResponse;
 import com.api.sqlcopilot.enums.ActionType;
 import com.api.sqlcopilot.exception.LLMCommunicationException;
 import com.api.sqlcopilot.utils.SqlValidatorUtils;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -26,7 +27,8 @@ public class ChatService {
     @Value("${openrouter.api-key}")
     private String apiKey;
 
-    private static final String MODEL = "openrouter/owl-alpha";
+    @Value("${openrouter.llm-model}")
+    private String model;
 
     public ChatService(LLMClient client, ActionRouter action, SchemaIntrospectionService introspection) {
         this.client = client;
@@ -34,15 +36,26 @@ public class ChatService {
         this.introspection = introspection;
     }
 
+    @CircuitBreaker(name = "llm-client", fallbackMethod = "fallback")
     public ChatResponse process(ChatRequest request) {
         log.info("Processing request: action={}", request.action());
 
-        String tables = introspection.introspect();
+        if (request.message().length() > 3000) {
+            throw new IllegalArgumentException("Prompt too large");
+        }
+
+        String tables = null;
+
+        if (request.action() == ActionType.GENERATE) {
+            tables = introspection.introspect();
+        }
         String prompt = this.action.buildPrompt(request.action(), tables, request.message());
 
         LLMRequest llmRequest = new LLMRequest(
-                MODEL,
-                List.of(new LLMMessage("user", prompt))
+                model,
+                List.of(new LLMMessage("user", prompt)),
+                512,
+                0.1
         );
 
         try {
@@ -69,5 +82,10 @@ public class ChatService {
         } catch (Exception ex) {
             throw new LLMCommunicationException("Failed to communicate with LLM", ex);
         }
+    }
+
+    public ChatResponse fallback(ChatRequest request, Exception ex) {
+        log.error("Circuit breaker open — LLM unavailable: {}", ex.getMessage());
+        throw new LLMCommunicationException("LLM temporarily unavailable. Try again later.");
     }
 }

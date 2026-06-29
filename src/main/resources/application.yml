@@ -8,7 +8,7 @@ spring:
         config:
           default:
             connectTimeout: 5000
-            readTimeout: 300000
+            readTimeout: 20000
           llm-client:
             url: https://openrouter.ai/api/v1
 
@@ -17,8 +17,19 @@ spring:
       cache:
         period: 0
 
-server:
-  port: 8080
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      llm-client:
+        sliding-window-size: 10
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 30s
+        permitted-number-of-calls-in-half-open-state: 3
 
 openrouter:
   api-key: ${OPENROUTER_API_KEY}
+  llm-model: ${LLM_MODEL}
+
+server:
+  port: 8080

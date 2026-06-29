@@ -4,5 +4,7 @@ import java.util.List;
 
 public record LLMRequest(
         String model,
-        List<LLMMessage> messages
+        List<LLMMessage> messages,
+        Integer max_tokens,
+        Double temperature
 ) {}

@@ -12,13 +12,14 @@ import java.nio.charset.StandardCharsets;
 @Slf4j
 public class SchemaIntrospectionService {
 
+    private final String schema;
+
+    public SchemaIntrospectionService() throws IOException {
+        schema = new ClassPathResource("schema/schema.md")
+                .getContentAsString(StandardCharsets.UTF_8);
+    }
+
     public String introspect() {
-        try {
-            ClassPathResource resource = new ClassPathResource("schema/schema.md");
-            return resource.getContentAsString(StandardCharsets.UTF_8);
-        } catch (IOException ex) {
-            log.error("Schema file not found");
-            throw new SchemaIntrospectionException(ex);
-        }
+        return schema;
     }
 }
