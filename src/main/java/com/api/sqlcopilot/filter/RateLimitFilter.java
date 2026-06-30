@@ -1,7 +1,6 @@
 package com.api.sqlcopilot.filter;
 
 import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.Caffeine;
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.Refill;
@@ -16,10 +15,11 @@ import java.time.Duration;
 @Component
 public class RateLimitFilter implements Filter {
 
-    private final Cache<String, Bucket> buckets = Caffeine.newBuilder()
-            .expireAfterAccess(Duration.ofHours(1))
-            .maximumSize(10_000)
-            .build();
+    private final Cache<String, Bucket> buckets;
+
+    public RateLimitFilter(Cache<String, Bucket> rateLimitBucketCache) {
+        this.buckets = rateLimitBucketCache;
+    }
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)

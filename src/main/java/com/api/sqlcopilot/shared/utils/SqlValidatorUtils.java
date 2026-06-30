@@ -1,4 +1,4 @@
-package com.api.sqlcopilot.utils;
+package com.api.sqlcopilot.shared.utils;
 
 import com.api.sqlcopilot.exception.ForbiddenSqlException;
 import lombok.extern.slf4j.Slf4j;

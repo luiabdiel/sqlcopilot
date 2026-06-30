@@ -8,7 +8,7 @@ import com.api.sqlcopilot.dto.ChatRequest;
 import com.api.sqlcopilot.dto.ChatResponse;
 import com.api.sqlcopilot.enums.ActionType;
 import com.api.sqlcopilot.exception.LLMCommunicationException;
-import com.api.sqlcopilot.utils.SqlValidatorUtils;
+import com.api.sqlcopilot.shared.utils.SqlValidatorUtils;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
