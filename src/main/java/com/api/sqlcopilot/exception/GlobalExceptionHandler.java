@@ -99,6 +99,19 @@ public class GlobalExceptionHandler {
         );
     }
 
+    @ExceptionHandler(UnsupportedActionException.class)
+    public ResponseEntity<ErrorResponse> handleUnsupportedAction(UnsupportedActionException ex) {
+        log.error("Unsupported action requested: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+                new ErrorResponse(
+                        HttpStatus.BAD_REQUEST.value(),
+                        "Unsupported Action",
+                        ex.getMessage(),
+                        LocalDateTime.now()
+                )
+        );
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGeneric(Exception ex) {
         log.error("Unexpected error: {}", ex.getMessage());

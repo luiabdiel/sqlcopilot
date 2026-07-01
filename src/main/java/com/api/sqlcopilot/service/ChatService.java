@@ -8,6 +8,8 @@ import com.api.sqlcopilot.dto.ChatRequest;
 import com.api.sqlcopilot.dto.ChatResponse;
 import com.api.sqlcopilot.enums.ActionType;
 import com.api.sqlcopilot.exception.LLMCommunicationException;
+import com.api.sqlcopilot.exception.UnsupportedActionException;
+import com.api.sqlcopilot.shared.utils.PromptGuardUtils;
 import com.api.sqlcopilot.shared.utils.SqlValidatorUtils;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.extern.slf4j.Slf4j;
@@ -40,15 +42,17 @@ public class ChatService {
     public ChatResponse process(ChatRequest request) {
         log.info("Processing request: action={}", request.action());
 
+        if (request.action() != ActionType.GENERATE) {
+            throw new UnsupportedActionException("Ação '" + request.action() + "' ainda não está disponível.");
+        }
+
         if (request.message().length() > 3000) {
             throw new IllegalArgumentException("Prompt too large");
         }
 
-        String tables = null;
+        PromptGuardUtils.validateUserIntent(request.message());
 
-        if (request.action() == ActionType.GENERATE) {
-            tables = introspection.introspect();
-        }
+        String tables = introspection.introspect();
         String prompt = this.action.buildPrompt(request.action(), tables, request.message());
 
         LLMRequest llmRequest = new LLMRequest(
@@ -71,13 +75,9 @@ public class ChatService {
                 throw new LLMCommunicationException("LLM returned an empty content");
             }
 
-            if (request.action() == ActionType.GENERATE) {
-                SqlValidatorUtils.validate(content);
+            SqlValidatorUtils.validate(content);
 
-                return new ChatResponse(request.action(), content, null);
-            }
-
-            return new ChatResponse(request.action(), null, content);
+            return new ChatResponse(request.action(), content, null);
 
         } catch (Exception ex) {
             throw new LLMCommunicationException("Failed to communicate with LLM", ex);
