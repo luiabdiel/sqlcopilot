@@ -64,7 +64,7 @@ Atualmente, o SQL Copilot utiliza o seguinte modelo:
 
 | Modelo | Identificador | Descrição |
 |---------|---------------|-----------|
-| **Owl Alpha** | `openrouter/owl-alpha` | Modelo de alto desempenho voltado para workloads agentic, com suporte nativo a uso de ferramentas (tool use), contexto longo (*long context*), geração de código, automação de fluxos e execução de instruções complexas. |
+| **Poolside: Laguna XS.2 (free)** | `poolside/laguna-xs.2:free` | Modelo de alto desempenho voltado para workloads agentic, com suporte nativo a uso de ferramentas (tool use), contexto longo (*long context*), geração de código, automação de fluxos e execução de instruções complexas. |
 
 > **Observação:** de acordo com o provedor, prompts e respostas podem ser registrados e utilizados para aprimorar o modelo.
 
@@ -173,17 +173,21 @@ LLM_MODEL=xxxxxxxxxxxxxxxxxxxxxxxx
 
 ---
 
-# ▶️ Executando
+# ▶️ Executando Docker 🐳
 
-```bash
-./mvnw spring-boot:run
-```
+## Pré-requisitos 
 
-ou
+- [Docker](https://www.docker.com/) instalado 
 
-```bash
-mvn spring-boot:run
-```
+## Comandos
+
+| Comando                        | Descrição                         |
+|--------------------------------|-----------------------------------|
+| `docker-compose up --build -d` | Build da imagem e sobe o container |
+| `docker-compose up -d`         | Sobe o container sem rebuild      |
+| `docker-compose down`          | Para e remove o container         |
+
+Após subir, acesse: `http://localhost:8080/chat`
 
 ---
 

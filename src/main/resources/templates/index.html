@@ -96,8 +96,14 @@
             });
 
             const data = await response.json();
-            const content = data.sql ?? data.explanation;
 
+            if (!response.ok) {
+                resultPre.textContent = `Erro: ${data.message ?? 'Tente novamente mais tarde.'}`;
+                result.style.display = 'block';
+                return;
+            }
+
+            const content = data.sql ?? data.explanation;
             badge.textContent = data.action;
             result.style.display = 'block';
             typewrite(content);

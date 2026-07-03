@@ -1,0 +1,19 @@
+services:
+  sqlcopilot:
+    build:
+      context: .
+      args:
+        progress: plain
+    image: sqlcopilot/app:latest
+    environment:
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY}
+      LLM_MODEL: ${LLM_MODEL}
+    ports:
+      - 8080:8080
+    container_name: sqlcopilot
+    volumes:
+      - $HOME/.m2:/root/.m2
+    restart: unless-stopped
+
+volumes:
+  maven-repository:
