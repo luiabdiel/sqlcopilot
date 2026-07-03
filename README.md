@@ -15,6 +15,7 @@ Converte solicitações em linguagem natural para consultas SQL seguras, permiti
 - 🚦 Limitar requisições por IP (Rate Limit)
 - 🔁 Utilizar Circuit Breaker para chamadas à LLM
 - ⚡ Cache em memória para otimizar Rate Limit
+- 💾 Cache de respostas para prompts idênticos (evita chamadas desnecessárias à LLM)
 - 🌐 Interface Web com Thymeleaf
 
 ---
@@ -37,10 +38,11 @@ Converte solicitações em linguagem natural para consultas SQL seguras, permiti
 | spring-boot-starter-validation | Validação de DTOs |
 | spring-boot-starter-thymeleaf | Interface Web |
 | spring-boot-starter-aop | Suporte ao Resilience4j |
+| spring-boot-starter-cache | Abstração de cache do Spring |
 | spring-cloud-starter-openfeign | Comunicação com a LLM |
 | resilience4j-spring-boot3 | Circuit Breaker |
 | bucket4j-core | Rate Limiting |
-| caffeine | Cache |
+| caffeine | Cache em memória (Rate Limit e prompts) |
 | jsqlparser | Validação sintática de SQL |
 | lombok | Redução de boilerplate |
 
@@ -145,6 +147,14 @@ A aplicação rejeita consultas que:
 ## 4. Circuit Breaker
 
 Protege a aplicação caso a LLM esteja indisponível ou lenta, evitando chamadas repetidas.
+
+---
+
+## 5. Cache de Prompts
+
+Prompts idênticos retornam a resposta diretamente do cache em memória (Caffeine), **sem realizar uma nova chamada à LLM**.
+
+Isso reduz latência, economiza tokens e protege contra uso repetitivo da API.
 
 ---
 
