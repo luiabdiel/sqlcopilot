@@ -162,6 +162,7 @@ Configure as seguintes variáveis:
 |----------|-----------|
 | OPENROUTER_API_KEY | Chave da API do OpenRouter |
 | LLM_MODEL | Modelo utilizado pela aplicação |
+| SSE_THREAD_POOL_SIZE| Tamanho do pool de threads para SSE (Server-Sent Events) |
 
 Exemplo:
 
@@ -169,6 +170,8 @@ Exemplo:
 OPENROUTER_API_KEY=xxxxxxxxxxxxxxxxxxxxxxxx
 
 LLM_MODEL=xxxxxxxxxxxxxxxxxxxxxxxx
+
+SSE_THREAD_POOL_SIZE=xx
 ```
 
 ---
