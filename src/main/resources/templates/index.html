@@ -7,56 +7,107 @@
     <link rel="stylesheet" th:href="@{/css/style.css}"/>
 </head>
 <body>
-<div class="container">
+<div class="page">
     <header>
         <h1>SQL Copilot</h1>
         <p>Gere e explique queries SQL em linguagem natural</p>
     </header>
-    <div class="form-card">
-        <div class="field">
-            <label for="action">Ação</label>
-            <select id="action">
-                <option value="GENERATE">Gerar SQL</option>
-                <option value="EXPLAIN" disabled>Explicar SQL (em breve)</option>
-            </select>
+
+    <div class="layout">
+        <div class="container">
+            <div class="form-card">
+                <div class="field">
+                    <label for="action">Ação</label>
+                    <select id="action">
+                        <option value="GENERATE">Gerar SQL</option>
+                        <option value="EXPLAIN" disabled>Explicar SQL (em breve)</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label for="message">Mensagem</label>
+                    <textarea id="message"
+                              rows="3"
+                              placeholder="Ex: Top 10 clientes por valor total de pedidos"></textarea>
+                </div>
+                <button id="submit-btn">
+                    <span class="spinner" id="btn-spinner"></span>
+                    <span id="btn-label">Enviar</span>
+                    <span class="loading-dots" id="btn-dots">
+                        <span></span><span></span><span></span>
+                    </span>
+                </button>
+            </div>
+            <div class="result" id="result" style="display: none;">
+                <div class="result-header">
+                    <span class="badge" id="badge"></span>
+                    <span>Resultado</span>
+                </div>
+                <pre id="result-pre"></pre>
+            </div>
         </div>
-        <div class="field">
-            <label for="message">Mensagem</label>
-            <textarea id="message"
-                      rows="3"
-                      placeholder="Ex: Top 10 clientes por valor total de pedidos"></textarea>
-        </div>
-        <button id="submit-btn">Enviar</button>
-    </div>
-    <div class="result" id="result" style="display: none;">
-        <div class="result-header">
-            <span class="badge" id="badge"></span>
-            <span>Resultado</span>
-        </div>
-        <pre id="result-pre"></pre>
+
+        <aside class="timeline-panel">
+            <h2>Atividade</h2>
+            <ul class="timeline" id="timeline-list">
+                <li class="timeline-item" data-step="validating">
+                    <span class="dot"></span>
+                    <p class="timeline-label">Validando a pergunta</p>
+                </li>
+                <li class="timeline-item" data-step="schema">
+                    <span class="dot"></span>
+                    <p class="timeline-label">Lendo schema do banco</p>
+                </li>
+                <li class="timeline-item" data-step="generating">
+                    <span class="dot"></span>
+                    <p class="timeline-label">Gerando SQL com a IA</p>
+                </li>
+                <li class="timeline-item" data-step="validating_sql">
+                    <span class="dot"></span>
+                    <p class="timeline-label">Validando o SQL gerado</p>
+                </li>
+                <li class="timeline-item" data-step="done">
+                    <span class="dot"></span>
+                    <p class="timeline-label">Concluído</p>
+                </li>
+            </ul>
+        </aside>
     </div>
 </div>
+
 <script>
     const button = document.getElementById('submit-btn');
+    const btnLabel = document.getElementById('btn-label');
     const select = document.getElementById('action');
     const textarea = document.getElementById('message');
     const result = document.getElementById('result');
     const resultPre = document.getElementById('result-pre');
     const badge = document.getElementById('badge');
 
+    const STEP_MIN_INTERVAL = 350;
+
+    let stepQueue = [];
+    let finalEvent = null;
+    let draining = false;
+
     function setLoading(loading) {
         button.disabled = loading;
-        button.style.cursor = loading ? 'not-allowed' : 'pointer';
+        button.classList.toggle('loading', loading);
+        btnLabel.textContent = loading ? 'Gerando' : 'Enviar';
         select.disabled = loading;
         select.style.opacity = loading ? '0.5' : '1';
         textarea.disabled = loading;
         textarea.style.opacity = loading ? '0.5' : '1';
     }
 
+    function showGeneratingPlaceholder() {
+        resultPre.innerHTML = 'Gerando resposta<span class="loading-dots"><span></span><span></span><span></span></span>';
+        resultPre.classList.add('pulse-text');
+    }
+
     function typewrite(text) {
+        resultPre.classList.remove('pulse-text');
         resultPre.textContent = '';
         let i = 0;
-
         const interval = setInterval(() => {
             if (i < text.length) {
                 resultPre.textContent += text[i];
@@ -67,53 +118,123 @@
         }, 12);
     }
 
-    let dotsInterval;
+    function setTimelineStep(step) {
+        const items = document.querySelectorAll('.timeline-item');
+        let reached = false;
+        items.forEach(item => {
+            const itemStep = item.dataset.step;
+            item.classList.remove('active', 'done');
+            if (itemStep === step) {
+                item.classList.add('active');
+                reached = true;
+            } else if (!reached) {
+                item.classList.add('done');
+            }
+        });
+    }
+
+    function resetTimeline() {
+        document.querySelectorAll('.timeline-item').forEach(item => {
+            item.classList.remove('active', 'done');
+        });
+    }
+
+    function delay(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    function enqueueEvent(event) {
+        if (event.step === 'done' || event.step === 'error') {
+            finalEvent = event;
+        } else {
+            stepQueue.push(event.step);
+        }
+        drainQueue();
+    }
+
+    async function drainQueue() {
+        if (draining) return;
+        draining = true;
+
+        while (stepQueue.length > 0) {
+            const step = stepQueue.shift();
+            setTimelineStep(step);
+            await delay(STEP_MIN_INTERVAL);
+        }
+
+        if (finalEvent) {
+            handleFinalEvent(finalEvent);
+            finalEvent = null;
+        }
+
+        draining = false;
+    }
+
+    function handleFinalEvent(event) {
+        if (event.step === 'error') {
+            resultPre.classList.remove('pulse-text');
+            resultPre.textContent = `Erro: ${event.label ?? 'Tente novamente mais tarde.'}`;
+            return;
+        }
+        setTimelineStep('done');
+        badge.textContent = event.action;
+        typewrite(event.sql || event.explanation);
+    }
+
+    async function streamChat(payload, onEvent) {
+        const response = await fetch('/api/chat/stream', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+            throw new Error('Erro na requisição');
+        }
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+
+        while (true) {
+            const { value, done } = await reader.read();
+            if (done) break;
+            buffer += decoder.decode(value, { stream: true });
+
+            let boundary;
+            while ((boundary = buffer.indexOf('\n\n')) >= 0) {
+                const rawEvent = buffer.slice(0, boundary);
+                buffer = buffer.slice(boundary + 2);
+                const dataLine = rawEvent.split('\n').find(l => l.startsWith('data:'));
+                if (dataLine) {
+                    onEvent(JSON.parse(dataLine.replace('data:', '').trim()));
+                }
+            }
+        }
+    }
 
     button.addEventListener('click', async () => {
         const message = textarea.value.trim();
-
-        if (!message) {
-            return;
-        }
+        if (!message) return;
 
         setLoading(true);
-        result.style.display = 'none';
+        result.style.display = 'block';
+        showGeneratingPlaceholder();
+        resetTimeline();
 
-        let dots = 0;
-        dotsInterval = setInterval(() => {
-            dots = (dots + 1) % 4;
-            button.textContent = 'Gerando' + '.'.repeat(dots);
-        }, 400);
+        stepQueue = [];
+        finalEvent = null;
+        draining = false;
 
         try {
-            const response = await fetch('/api/chat', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    action: select.value,
-                    message: message
-                })
-            });
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                resultPre.textContent = `Erro: ${data.message ?? 'Tente novamente mais tarde.'}`;
-                result.style.display = 'block';
-                return;
-            }
-
-            const content = data.sql ?? data.explanation;
-            badge.textContent = data.action;
-            result.style.display = 'block';
-            typewrite(content);
-
+            await streamChat(
+                { action: select.value, message },
+                (event) => enqueueEvent(event)
+            );
         } catch (err) {
+            resultPre.classList.remove('pulse-text');
             resultPre.textContent = 'Erro ao processar a requisição.';
-            result.style.display = 'block';
         } finally {
-            clearInterval(dotsInterval);
-            button.textContent = 'Enviar';
             setLoading(false);
         }
     });

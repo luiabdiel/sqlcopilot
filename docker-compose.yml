@@ -8,6 +8,7 @@ services:
     environment:
       OPENROUTER_API_KEY: ${OPENROUTER_API_KEY}
       LLM_MODEL: ${LLM_MODEL}
+      SSE_THREAD_POOL_SIZE: ${SSE_THREAD_POOL_SIZE}
     ports:
       - 8080:8080
     container_name: sqlcopilot

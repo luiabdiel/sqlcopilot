@@ -17,6 +17,10 @@ spring:
       cache:
         period: 0
 
+  cache:
+    type: caffeine
+    caffeine:
+      spec: maximumSize=500,expireAfterWrite=10m
 
 resilience4j:
   circuitbreaker:
@@ -30,6 +34,9 @@ resilience4j:
 openrouter:
   api-key: ${OPENROUTER_API_KEY}
   llm-model: ${LLM_MODEL}
+
+sse:
+  thread-pool-size: ${SSE_THREAD_POOL_SIZE}
 
 server:
   port: 8080

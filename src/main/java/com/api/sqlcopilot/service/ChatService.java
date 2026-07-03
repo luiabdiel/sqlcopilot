@@ -6,6 +6,7 @@ import com.api.sqlcopilot.client.feign.dto.LLMRequest;
 import com.api.sqlcopilot.client.feign.dto.LLMResponse;
 import com.api.sqlcopilot.dto.ChatRequest;
 import com.api.sqlcopilot.dto.ChatResponse;
+import com.api.sqlcopilot.dto.ProgressEvent;
 import com.api.sqlcopilot.enums.ActionType;
 import com.api.sqlcopilot.exception.LLMCommunicationException;
 import com.api.sqlcopilot.exception.UnsupportedActionException;
@@ -17,6 +18,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.function.Consumer;
 
 @Service
 @Slf4j
@@ -39,7 +41,7 @@ public class ChatService {
     }
 
     @CircuitBreaker(name = "llm-client", fallbackMethod = "fallback")
-    public ChatResponse process(ChatRequest request) {
+    public ChatResponse process(ChatRequest request, Consumer<ProgressEvent> onProgress) {
         log.info("Processing request: action={}", request.action());
 
         if (request.action() != ActionType.GENERATE) {
@@ -50,11 +52,14 @@ public class ChatService {
             throw new IllegalArgumentException("Prompt too large");
         }
 
+        onProgress.accept(new ProgressEvent("validating", "Validando a pergunta"));
         PromptGuardUtils.validateUserIntent(request.message());
 
+        onProgress.accept(new ProgressEvent("schema", "Lendo schema do banco"));
         String tables = introspection.introspect();
         String prompt = this.action.buildPrompt(request.action(), tables, request.message());
 
+        onProgress.accept(new ProgressEvent("generating", "Gerando SQL com a IA"));
         LLMRequest llmRequest = new LLMRequest(
                 model,
                 List.of(new LLMMessage("user", prompt)),
@@ -75,6 +80,7 @@ public class ChatService {
                 throw new LLMCommunicationException("LLM returned an empty content");
             }
 
+            onProgress.accept(new ProgressEvent("validating_sql", "Validando o SQL gerado"));
             SqlValidatorUtils.validate(content);
 
             return new ChatResponse(request.action(), content, null);
@@ -84,7 +90,7 @@ public class ChatService {
         }
     }
 
-    public ChatResponse fallback(ChatRequest request, Exception ex) {
+    public ChatResponse fallback(ChatRequest request, Consumer<ProgressEvent> onProgress, Exception ex) {
         log.error("Circuit breaker open — LLM unavailable: {}", ex.getMessage());
         throw new LLMCommunicationException("LLM temporarily unavailable. Try again later.");
     }

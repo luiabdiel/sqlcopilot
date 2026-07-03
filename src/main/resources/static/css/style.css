@@ -12,9 +12,9 @@ body {
     padding: 2rem 1rem;
 }
 
-.container {
+.page {
     width: 100%;
-    max-width: 680px;
+    max-width: 980px;
     display: flex;
     flex-direction: column;
     gap: 2rem;
@@ -29,6 +29,21 @@ header p {
     font-size: 0.875rem;
     color: #666;
     margin-top: 4px;
+}
+
+.layout {
+    display: flex;
+    gap: 1.5rem;
+    align-items: flex-start;
+}
+
+.container {
+    flex: 1;
+    min-width: 0;
+    max-width: 680px;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
 }
 
 .form-card {
@@ -83,14 +98,64 @@ button {
     font-family: 'Inter', system-ui, sans-serif;
     cursor: pointer;
     transition: background 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
 }
 
 button:hover { background: #333; }
 
 button:disabled {
-    opacity: 0.6;
+    opacity: 0.85;
     cursor: not-allowed;
-    background: #1a1a1a;
+}
+
+.spinner {
+    width: 13px;
+    height: 13px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    display: none;
+    margin-right: 6px;
+    animation: spin 0.6s linear infinite;
+}
+
+button.loading .spinner {
+    display: inline-block;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.loading-dots {
+    display: none;
+    margin-left: 2px;
+}
+
+button.loading .loading-dots,
+.pulse-text .loading-dots {
+    display: inline-flex;
+    gap: 2px;
+}
+
+.loading-dots span {
+    width: 3px;
+    height: 3px;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: 0.2;
+    animation: dot-blink 1.2s infinite;
+}
+
+.loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+.loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes dot-blink {
+    0%, 80%, 100% { opacity: 0.2; }
+    40% { opacity: 1; }
 }
 
 .result {
@@ -98,6 +163,12 @@ button:disabled {
     border: 1px solid #e5e5e5;
     border-radius: 12px;
     overflow: hidden;
+    animation: fade-in 0.2s ease;
+}
+
+@keyframes fade-in {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 .result-header {
@@ -127,4 +198,124 @@ pre {
     white-space: pre-wrap;
     word-break: break-word;
     color: #1a1a1a;
+}
+
+pre.pulse-text {
+    color: #888;
+    display: flex;
+    align-items: center;
+    animation: text-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes text-pulse {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 1; }
+}
+
+.timeline-panel {
+    width: 260px;
+    flex-shrink: 0;
+    background: #fff;
+    border: 1px solid #e5e5e5;
+    border-radius: 12px;
+    padding: 1.25rem;
+    position: sticky;
+    top: 2rem;
+}
+
+.timeline-panel h2 {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 1rem;
+}
+
+.timeline {
+    list-style: none;
+}
+
+.timeline-item {
+    display: flex;
+    gap: 10px;
+    padding-bottom: 1.25rem;
+    position: relative;
+    opacity: 0.4;
+    transform: translateX(0);
+    transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.timeline-item:not(:last-child)::before {
+    content: '';
+    position: absolute;
+    left: 5px;
+    top: 16px;
+    width: 1px;
+    height: calc(100% - 4px);
+    background: #e5e5e5;
+    transition: background 0.3s ease;
+}
+
+.timeline-item.done:not(:last-child)::before {
+    background: #1a1a1a;
+}
+
+.timeline-item .dot {
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    background: #e5e5e5;
+    border: 2px solid #fff;
+    outline: 1px solid #e5e5e5;
+    flex-shrink: 0;
+    margin-top: 2px;
+    transition: background 0.2s ease, outline-color 0.2s ease;
+}
+
+.timeline-item.active {
+    opacity: 1;
+    transform: translateX(2px);
+}
+
+.timeline-item.active .dot {
+    background: #1a1a1a;
+    outline-color: #1a1a1a;
+    animation: pulse 1s infinite, pop 0.3s ease;
+}
+
+.timeline-item.done {
+    opacity: 1;
+}
+
+.timeline-item.done .dot {
+    background: #1a1a1a;
+    outline-color: #1a1a1a;
+    animation: none;
+}
+
+.timeline-label {
+    font-size: 0.85rem;
+    color: #1a1a1a;
+    transition: color 0.2s ease;
+}
+
+.timeline-item:not(.active):not(.done) .timeline-label {
+    color: #999;
+}
+
+@keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(26, 26, 26, 0.25); }
+    50% { box-shadow: 0 0 0 4px rgba(26, 26, 26, 0.05); }
+}
+
+@keyframes pop {
+    0% { transform: scale(0.6); }
+    60% { transform: scale(1.15); }
+    100% { transform: scale(1); }
+}
+
+@media (max-width: 900px) {
+    .layout { flex-direction: column-reverse; }
+    .timeline-panel { width: 100%; position: static; }
 }

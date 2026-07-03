@@ -30,7 +30,7 @@ public class ViewController {
     public String process(@RequestParam final String message,
                           @RequestParam final ActionType action,
                           final Model model) {
-        final ChatResponse response = chatService.process(new ChatRequest(action, message));
+        final ChatResponse response = chatService.process(new ChatRequest(action, message), event -> {});
 
         model.addAttribute("action", action);
         model.addAttribute("message", message);
