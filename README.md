@@ -189,6 +189,7 @@ SSE_THREAD_POOL_SIZE=xx
 | `docker-compose up --build -d` | Build da imagem e sobe o container |
 | `docker-compose up -d`         | Sobe o container sem rebuild      |
 | `docker-compose down`          | Para e remove o container         |
+| `docker-compose logs -f`         | Exibe os logs do container        |
 
 Após subir, acesse: `http://localhost:8080/chat`
 
