@@ -31,6 +31,12 @@ resilience4j:
         wait-duration-in-open-state: 30s
         permitted-number-of-calls-in-half-open-state: 3
 
+springdoc:
+  api-docs:
+    path: /documentation/api-docs
+  swagger-ui:
+    path: /documentation/swagger-ui
+
 openrouter:
   api-key: ${OPENROUTER_API_KEY}
   llm-model: ${LLM_MODEL}
