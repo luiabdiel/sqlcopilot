@@ -17,6 +17,7 @@ Converte solicitações em linguagem natural para consultas SQL seguras, permiti
 - ⚡ Cache em memória para otimizar Rate Limit
 - 💾 Cache de respostas para prompts idênticos (evita chamadas desnecessárias à LLM)
 - 🌐 Interface Web com Thymeleaf
+- 📄 Documentação interativa via Swagger UI (SpringDoc OpenAPI)
 
 ---
 
@@ -45,6 +46,7 @@ Converte solicitações em linguagem natural para consultas SQL seguras, permiti
 | caffeine | Cache em memória (Rate Limit e prompts) |
 | jsqlparser | Validação sintática de SQL |
 | lombok | Redução de boilerplate |
+| springdoc-openapi-starter-webmvc-ui | Documentação interativa (Swagger UI) |
 
 ---
 
@@ -81,6 +83,9 @@ src
 ├── controller
 │   ├── ChatController
 │   └── ViewController
+│
+├── documentation
+│   └── ChatControllerDoc
 │
 ├── service
 │   ├── ChatService
@@ -199,9 +204,38 @@ SSE_THREAD_POOL_SIZE=xx
 | `docker-compose up --build -d` | Build da imagem e sobe o container |
 | `docker-compose up -d`         | Sobe o container sem rebuild      |
 | `docker-compose down`          | Para e remove o container         |
-| `docker-compose logs -f`         | Exibe os logs do container        |
+| `docker-compose logs -f`       | Exibe os logs do container        |
 
 Após subir, acesse: `http://localhost:8080/chat`
+
+---
+
+# 📄 Documentação da API (Swagger UI)
+
+A aplicação utiliza o **SpringDoc OpenAPI 2.8.16** para gerar automaticamente a documentação interativa dos endpoints.
+
+| Interface | URL |
+|-----------|-----|
+| Swagger UI | `http://localhost:8080/swagger-ui/index.html` |
+| OpenAPI JSON | `http://localhost:8080/v3/api-docs` |
+| OpenAPI YAML | `http://localhost:8080/v3/api-docs.yaml` |
+
+## Como acessar
+
+1. Suba a aplicação (via Docker ou localmente)
+2. Acesse `http://localhost:8080/swagger-ui/index.html` no navegador
+3. Explore e teste os endpoints diretamente pela interface
+
+## Estrutura da documentação
+
+A documentação dos endpoints é separada da implementação por meio de interfaces na pasta `documentation/`:
+
+```text
+src/main/java/com/api/sqlcopilot/documentation/
+└── ChatControllerDoc.java    ← Contrato com anotações @Operation, @ApiResponses e @Tag
+```
+
+O `ChatController` implementa `ChatControllerDoc`, mantendo o código limpo e a documentação isolada.
 
 ---
 
@@ -230,6 +264,25 @@ Gera ou explica uma consulta SQL.
 
 ---
 
+## POST `/api/chat/stream`
+
+Processa a mensagem e retorna os eventos em tempo real via **Server-Sent Events (SSE)**.
+
+### Requisição
+
+```json
+{
+  "action": "GENERATE",
+  "message": "Liste os 10 clientes com maior saldo"
+}
+```
+
+### Resposta
+
+Fluxo de eventos SSE (`text/event-stream`) com os chunks da resposta sendo enviados progressivamente.
+
+---
+
 # 📖 Ações Disponíveis
 
 | Ação | Status | Descrição |
@@ -238,6 +291,7 @@ Gera ou explica uma consulta SQL.
 | `EXPLAIN` | ⏸️ Desativada | Funcionalidade temporariamente desabilitada. |
 
 > **Observação:** A ação **`EXPLAIN`** foi desativada para reduzir o consumo de tokens da LLM. Como este é um projeto desenvolvido para fins de estudo e utiliza um modelo com limite de uso, foi priorizada a funcionalidade **`GENERATE`**, que demanda significativamente menos tokens. Essa decisão permite manter a aplicação disponível por mais tempo sem custos adicionais.
+
 ---
 
 # 🗂️ Schema do Banco
