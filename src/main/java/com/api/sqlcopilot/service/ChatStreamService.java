@@ -3,7 +3,6 @@ package com.api.sqlcopilot.service;
 import com.api.sqlcopilot.dto.ChatRequest;
 import com.api.sqlcopilot.dto.ChatResponse;
 import com.api.sqlcopilot.shared.sse.SseEventPublisher;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
