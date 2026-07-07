@@ -12,7 +12,6 @@
         <h1>SQL Copilot</h1>
         <p>Gere e explique queries SQL em linguagem natural</p>
     </header>
-
     <div class="layout">
         <div class="container">
             <div class="form-card">
@@ -41,11 +40,20 @@
                 <div class="result-header">
                     <span class="badge" id="badge"></span>
                     <span>Resultado</span>
+                    <button id="copy-btn" class="copy-btn" title="Copiar resultado">
+                        <svg id="copy-icon" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                        </svg>
+                        <svg id="check-icon" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:none;">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                        <span id="copy-label">Copiar</span>
+                    </button>
                 </div>
                 <pre id="result-pre"></pre>
             </div>
         </div>
-
         <aside class="timeline-panel">
             <h2>Atividade</h2>
             <ul class="timeline" id="timeline-list">
@@ -73,7 +81,6 @@
         </aside>
     </div>
 </div>
-
 <script>
     const button = document.getElementById('submit-btn');
     const btnLabel = document.getElementById('btn-label');
@@ -82,6 +89,10 @@
     const result = document.getElementById('result');
     const resultPre = document.getElementById('result-pre');
     const badge = document.getElementById('badge');
+    const copyBtn = document.getElementById('copy-btn');
+    const copyIcon = document.getElementById('copy-icon');
+    const checkIcon = document.getElementById('check-icon');
+    const copyLabel = document.getElementById('copy-label');
 
     const STEP_MIN_INTERVAL = 350;
 
@@ -94,9 +105,7 @@
         button.classList.toggle('loading', loading);
         btnLabel.textContent = loading ? 'Gerando' : 'Enviar';
         select.disabled = loading;
-        select.style.opacity = loading ? '0.5' : '1';
         textarea.disabled = loading;
-        textarea.style.opacity = loading ? '0.5' : '1';
     }
 
     function showGeneratingPlaceholder() {
@@ -213,8 +222,22 @@
         }
     }
 
-    button.addEventListener('click', async () => {
-        const message = textarea.value.trim();
+    copyBtn.addEventListener('click', () => {
+        const text = resultPre.textContent;
+        if (!text) return;
+        navigator.clipboard.writeText(text).then(() => {
+            copyIcon.style.display = 'none';
+            checkIcon.style.display = 'inline';
+            copyLabel.textContent = 'Copiado!';
+            setTimeout(() => {
+                copyIcon.style.display = 'inline';
+                checkIcon.style.display = 'none';
+                copyLabel.textContent = 'Copiar';
+            }, 2000);
+        });
+    });
+
+    button.addEventListener('click', async () => {        const message = textarea.value.trim();
         if (!message) return;
 
         setLoading(true);
