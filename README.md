@@ -94,7 +94,8 @@ src
 │
 ├── client
 │   └── feign
-│       └── LLMClient
+│       ├── LLMClient
+│       └── LLMCachedClient
 │
 ├── filter
 │   └── RateLimitFilter
@@ -105,6 +106,11 @@ src
 │
 └── shared
     ├── config
+    │   ├── AsyncConfig
+    │   ├── RateLimitConfig
+    │   └── SwaggerConfig
+    ├── sse
+    │   └── SseEventPublisher
     └── utils
         ├── PromptGuardUtils
         └── SqlValidatorUtils
@@ -116,7 +122,9 @@ src
 
 ## 1. Rate Limit
 
-Limita cada endereço IP a **10 requisições por minuto**.
+Limita cada endereço IP a **10 requisições por minuto**, aplicado **apenas** ao endpoint `POST /api/chat`.
+
+> **Observação:** o endpoint `/api/chat/stream` não está sujeito ao Rate Limit.
 
 ---
 
@@ -216,14 +224,14 @@ A aplicação utiliza o **SpringDoc OpenAPI 2.8.16** para gerar automaticamente 
 
 | Interface | URL |
 |-----------|-----|
-| Swagger UI | `http://localhost:8080/swagger-ui/index.html` |
-| OpenAPI JSON | `http://localhost:8080/v3/api-docs` |
-| OpenAPI YAML | `http://localhost:8080/v3/api-docs.yaml` |
+| Swagger UI | `http://localhost:8080/documentation/swagger-ui` |
+| OpenAPI JSON | `http://localhost:8080/documentation/api-docs` |
+| OpenAPI YAML | `http://localhost:8080/documentation/api-docs.yaml` |
 
 ## Como acessar
 
 1. Suba a aplicação (via Docker ou localmente)
-2. Acesse `http://localhost:8080/swagger-ui/index.html` no navegador
+2. Acesse `http://localhost:8080/documentation/swagger-ui` no navegador
 3. Explore e teste os endpoints diretamente pela interface
 
 ## Estrutura da documentação
@@ -258,7 +266,9 @@ Gera ou explica uma consulta SQL.
 
 ```json
 {
-  "response": "SELECT * FROM clientes ORDER BY saldo DESC LIMIT 10;"
+  "action": "GENERATE",
+  "sql": "SELECT * FROM clientes ORDER BY saldo DESC LIMIT 10;",
+  "explanation": null
 }
 ```
 
