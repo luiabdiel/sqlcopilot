@@ -240,7 +240,7 @@ A documentação dos endpoints é separada da implementação por meio de interf
 
 ```text
 src/main/java/com/api/sqlcopilot/documentation/
-└── ChatControllerDoc.java    ← Contrato com anotações @Operation, @ApiResponses e @Tag
+└── ChatControllerDoc.java
 ```
 
 O `ChatController` implementa `ChatControllerDoc`, mantendo o código limpo e a documentação isolada.
