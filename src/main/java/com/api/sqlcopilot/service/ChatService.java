@@ -51,7 +51,7 @@ public class ChatService {
         return this.client.send(request, prompt);
     }
 
-    public void fallback(ChatRequest request, Consumer<ProgressEvent> onProgress, Exception ex) {
+    public ChatResponse fallback(ChatRequest request, Consumer<ProgressEvent> onProgress, Throwable ex) {
         log.error("Circuit breaker open — LLM unavailable: {}", ex.getMessage());
         throw new LLMCommunicationException("LLM temporarily unavailable. Try again later.");
     }
