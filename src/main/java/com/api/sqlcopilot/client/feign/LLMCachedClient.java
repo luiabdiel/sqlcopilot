@@ -5,6 +5,7 @@ import com.api.sqlcopilot.client.feign.dto.LLMRequest;
 import com.api.sqlcopilot.client.feign.dto.LLMResponse;
 import com.api.sqlcopilot.dto.ChatRequest;
 import com.api.sqlcopilot.dto.ChatResponse;
+import com.api.sqlcopilot.enums.ActionType;
 import com.api.sqlcopilot.exception.LLMCommunicationException;
 import com.api.sqlcopilot.shared.utils.SqlValidatorUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -54,9 +55,12 @@ public class LLMCachedClient {
                 throw new LLMCommunicationException("LLM returned an empty content");
             }
 
-            SqlValidatorUtils.validate(content);
-
-            return new ChatResponse(request.action(), content, null);
+            if (request.action() == ActionType.GENERATE) {
+                SqlValidatorUtils.validate(content);
+                return new ChatResponse(request.action(), content, null);
+            } else {
+                return new ChatResponse(request.action(), null, content);
+            }
         } catch (LLMCommunicationException ex) {
             throw ex;
         } catch (Exception ex) {

@@ -6,8 +6,6 @@ import com.api.sqlcopilot.dto.ChatResponse;
 import com.api.sqlcopilot.dto.ProgressEvent;
 import com.api.sqlcopilot.enums.ActionType;
 import com.api.sqlcopilot.exception.LLMCommunicationException;
-import com.api.sqlcopilot.exception.UnsupportedActionException;
-import com.api.sqlcopilot.shared.utils.PromptGuardUtils;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -32,19 +30,16 @@ public class ChatService {
     public ChatResponse process(ChatRequest request, Consumer<ProgressEvent> onProgress) {
         log.info("Processing request: action={}", request.action());
 
-        if (request.action() != ActionType.GENERATE) {
-            throw new UnsupportedActionException("Ação '" + request.action() + "' ainda não está disponível.");
-        }
-
         if (request.message().length() > 3000) {
             throw new IllegalArgumentException("Prompt too large");
         }
 
-        onProgress.accept(new ProgressEvent("validating", "Validando a pergunta"));
-        PromptGuardUtils.validateUserIntent(request.message());
+        String tables = null;
+        if (request.action() == ActionType.GENERATE) {
+            onProgress.accept(new ProgressEvent("schema", "Lendo schema do banco"));
+            tables = introspection.introspect();
+        }
 
-        onProgress.accept(new ProgressEvent("schema", "Lendo schema do banco"));
-        String tables = introspection.introspect();
         String prompt = this.action.buildPrompt(request.action(), tables, request.message());
 
         onProgress.accept(new ProgressEvent("generating", "Gerando SQL com a IA"));
