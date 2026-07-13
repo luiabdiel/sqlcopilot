@@ -76,6 +76,87 @@ Mais informações sobre os modelos disponíveis no OpenRouter: https://openrout
 
 ---
 
+## 🔑 Criando uma API Key no OpenRouter
+
+Siga os passos abaixo para obter sua chave de API:
+
+1. Acesse [https://openrouter.ai](https://openrouter.ai) e clique em **Sign In** (ou **Sign Up** para criar uma conta).
+2. Após autenticar, vá em **[Keys](https://openrouter.ai/settings/keys)** no menu superior direito (ou navegue até `Settings > Keys`).
+3. Clique em **Create Key**.
+4. Dê um nome à sua chave (ex: `sqlcopilot`) e confirme.
+5. Copie a chave gerada — ela **não será exibida novamente**.
+6. Cole a chave na variável `OPENROUTER_API_KEY` do seu arquivo `.env`.
+
+> **Dica:** Modelos marcados como `(free)` não exigem créditos. Basta ter uma conta criada.
+
+---
+
+## 🧩 Selecionando um Modelo de LLM
+
+1. Acesse o catálogo de modelos em [https://openrouter.ai/models](https://openrouter.ai/models).
+2. Filtre por critérios como **gratuito**, **contexto longo**, **código**, etc.
+3. Clique no modelo desejado para ver detalhes (preço por token, janela de contexto, capacidades).
+4. Copie o **identificador** do modelo (ex: `poolside/laguna-xs.2:free`).
+5. Cole o identificador na variável `LLM_MODEL` do seu arquivo `.env`.
+
+Exemplos de modelos gratuitos disponíveis:
+
+| Modelo | Identificador |
+|--------|--------------|
+| Poolside: Laguna XS.2 | `poolside/laguna-xs.2:free` |
+| Meta: Llama 3.1 8B Instruct | `meta-llama/llama-3.1-8b-instruct:free` |
+| Google: Gemma 3 4B | `google/gemma-3-4b-it:free` |
+| Mistral 7B Instruct | `mistralai/mistral-7b-instruct:free` |
+
+> **Atenção:** a disponibilidade e os identificadores dos modelos podem mudar. Sempre verifique o catálogo oficial antes de configurar.
+
+---
+
+## 🧪 Testando a API do OpenRouter com cURL
+
+Antes de subir a aplicação, você pode validar sua chave e o modelo escolhido diretamente via terminal:
+
+```bash
+curl https://openrouter.ai/api/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $OPENROUTER_API_KEY" \
+  -d '{
+    "model": "poolside/laguna-xs.2:free",
+    "messages": [
+      {
+        "role": "user",
+        "content": "What is the meaning of life?"
+      }
+    ]
+  }'
+```
+
+Uma resposta bem-sucedida terá o seguinte formato:
+
+```json
+{
+  "id": "gen-xxxxxxxxxxxx",
+  "model": "poolside/laguna-xs.2:free",
+  "choices": [
+    {
+      "message": {
+        "role": "assistant",
+        "content": "The meaning of life is..."
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 15,
+    "completion_tokens": 42,
+    "total_tokens": 57
+  }
+}
+```
+
+> **Windows (PowerShell):** substitua `$OPENROUTER_API_KEY` pelo valor literal da chave ou defina a variável de ambiente antes com `$env:OPENROUTER_API_KEY = "sua-chave"`.
+
+---
+
 # 🏗️ Arquitetura
 
 ```text
