@@ -159,43 +159,17 @@ Uma resposta bem-sucedida terá o seguinte formato:
 
 # 🏗️ Arquitetura
 
-```text
-src
-├── controller
-│   ├── ChatController
-│   └── ViewController
-│
-├── documentation
-│   └── ChatControllerDoc
-│
-├── service
-│   ├── ChatService
-│   ├── ActionRouter
-│   └── SchemaIntrospectionService
-│
-├── client
-│   └── feign
-│       ├── LLMClient
-│       └── LLMCachedClient
-│
-├── filter
-│   └── RateLimitFilter
-│
-├── dto
-├── enums
-├── exception
-│
-└── shared
-    ├── config
-    │   ├── AsyncConfig
-    │   ├── RateLimitConfig
-    │   └── SwaggerConfig
-    ├── sse
-    │   └── SseEventPublisher
-    └── utils
-        ├── PromptGuardUtils
-        └── SqlValidatorUtils
-```
+<img src="assets/sql-copilot.png" alt="SQL Copilot Architecture" width="800"/>
+
+O fluxo da aplicação segue as seguintes etapas:
+
+1. **Frontend** envia a requisição com a mensagem em linguagem natural para o Spring Boot.
+2. **Spring Boot** realiza a primeira validação — verifica o Rate Limit por IP, aplica o Prompt Guard para bloquear intenções destrutivas e checa a ação solicitada.
+3. **Schema** é carregado do arquivo `schema.md`, que contém toda a estrutura do banco de dados (tabelas, colunas e relacionamentos).
+4. **Montagem do prompt** — o Spring combina a mensagem do usuário com o schema do banco e constrói o prompt final.
+5. **LLM (OpenRouter)** recebe o prompt e o schema, processa a solicitação e retorna a consulta SQL gerada.
+6. **Validação da resposta** — o Spring valida o SQL retornado utilizando o JSQLParser, garantindo que seja exclusivamente um `SELECT` sem instruções múltiplas ou comandos proibidos.
+7. **Resposta** é devolvida ao Frontend com o SQL validado e pronto para uso.
 
 ---
 
